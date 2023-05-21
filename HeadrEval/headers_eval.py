@@ -37,10 +37,11 @@ def eval_strict_transport_security(content: str):
             try:
                 max_age = int(directive.split('=')[1])
                 result['max_age'] = max_age
+                if max_age < 2592000:
+                    print_msg('WARN', 'The "max-age" directive is too small. The minimum recommended value is 2592000 (30 days).')
             except ValueError:
-                print_msg(
-                    'WARN', "'max-age' is invalid, it allows a bad actor to downgrade the connection to HTTP, risking users exposure to man-in-the-middle attacks")
-
+                print_msg('WARN', "'max-age' is invalid, it allows a bad actor to downgrade the connection to HTTP, risking users' exposure to man-in-the-middle attacks")
+                            
         if directive.lower() == 'includeSubDomains':
             result['include_subdomains'] = True
 
@@ -55,47 +56,22 @@ def eval_permissions_policy(content: str) -> None:
 
     permissions = re.split(r', *|; *', content)
 
-    all_values = [
-        'accelerometer',
-        'ambient-light-sensor',
-        'autoplay',
-        'battery',
-        'camera',
-        'display-capture',
-        'document-domain',
-        'encrypted-media',
-        'execution-while-not-rendered',
-        'execution-while-out-of-viewport',
-        'fullscreen',
-        'geolocation',
-        'gyroscope',
-        'layout-animations',
-        'legacy-image-formats',
-        'magnetometer',
-        'microphone',
-        'midi',
-        'navigation-override',
-        'oversized-images',
-        'payment',
-        'picture-in-picture',
-        'publickey-credentials-get',
-        'screen-wake-lock',
-        'serial',
-        'sync-xhr',
-        'usb',
-        'wake-lock',
-        'web-share',
-        'xr-spatial-tracking',
-        'browsing-topics'
-    ]
+    for permission in permissions:
+        policy_parts = permission.split('=')
+        if policy_parts:
+            value = policy_parts[0].strip()
+            policy_value = policy_parts[1].strip() if len(policy_parts) > 1 else ''
 
-    for value in all_values:
-        matching_permissions = [p for p in permissions if p.startswith(value + '=')]
-        if matching_permissions:
-            for permission in matching_permissions:
-                policy_value = permission.split('=')[1]
+            if value == 'browsing-topics':
+                # Special case for 'browsing-topics'
                 if policy_value == 'none':
-                    print_msg('HIGH', f'{value} access is disabled')
+                    print_msg('WARN', 'browsing-topics access is disabled')
+                else:
+                    print_msg('OK', 'browsing-topics access is enabled')
+            else:
+                # General case for other permissions
+                if policy_value == 'none':
+                    print_msg('WARN', f'{value} access is disabled')
                 elif policy_value == 'self':
                     print_msg('OK', f'{value} access is limited to the same origin')
                 else:
@@ -103,8 +79,22 @@ def eval_permissions_policy(content: str) -> None:
 
     print_separator()
 
+
 def eval_x_frame_options(content: str) -> None:
-    pass
+    print_title('X-Frame-Options')
+    header_value = content.lower().strip()
+
+    if header_value == 'deny':
+        print_msg('OK', 'X-Frame-Options is set to "deny" (prevents framing of the web page)')
+    elif header_value == 'sameorigin':
+        print_msg('OK', 'X-Frame-Options is set to "sameorigin" (allows framing by pages from the same origin)')
+    elif header_value.startswith('allow-from'):
+        url = header_value[11:].strip()
+        print_msg('OK', f'X-Frame-Options is set to "allow-from: {url}" (allows framing from the specified URL)')
+    else:
+        print_msg('WARN', f'Invalid X-Frame-Options value: {header_value}')
+
+    print_separator()
 
 
 def eval_csp(content: str) -> None:
@@ -176,13 +166,90 @@ def eval_csp(content: str) -> None:
 
     print_separator()
 
+def eval_access_control_allow_origin(content: str) -> None:
+    print_title('Access-Control-Allow-Origin')
 
-def eval_cspro(value):
-    pass
+    if content == '*':
+        print_msg('WARN', 'Access-Control-Allow-Origin is set to "*" (allows requests from any origin)')
+    else:
+        origins = content.split(',')
+        origins = [origin.strip() for origin in origins]
+        allowed_origins = ', '.join(origins)
+        print_msg('OK', f'Access-Control-Allow-Origin is set to "{allowed_origins}" (allows requests from specified origins)')
+
+    print_separator()
 
 
-def eval_cors_opener_policy(value):
-    pass
+def eval_cors_opener_policy(content: str) -> None:
+    print_title('Cross-Origin-Opener-Policy')
+
+    if content.lower() == 'same-origin':
+        print_msg('OK', 'The opener browsing context is restricted to the same origin, preventing cross-origin interactions')
+
+    elif content.lower() == 'same-origin-allow-popups':
+        print_msg('OK', 'The opener browsing context is restricted to the same origin, allowing popups')
+
+    elif content.lower() == 'unsafe-none':
+        print_msg('WARN', 'The opener browsing context is not restricted and can be cross-origin')
+
+    elif content.lower() == 'same-origin-plus-coep':
+        print_msg('OK', 'The opener browsing context is restricted to the same origin and requires Cross-Origin-Embedder-Policy (COEP) enforcement')
+
+    elif content.lower() == 'same-origin-allow-popups-plus-coep':
+        print_msg('OK', 'The opener browsing context is restricted to the same origin, allowing popups, and requires COEP enforcement')
+
+    else:
+        print_msg('ERR', f'The specified Cross-Origin-Opener-Policy header has an invalid value: {content}')
+
+    print_separator()
+
+
+def eval_cors_embedded_policy(content: str) -> None:
+    print_title('Cross-Origin-Embedder-Policy')
+
+    if content.lower() == 'none':
+        print_msg('OK', 'No cross-origin embedding restrictions are enforced')
+
+    elif content.lower() == 'credentialless':
+        print_msg('OK', 'Cross-origin embedding is allowed without credentials')
+
+    elif content.lower() == 'require-corp':
+        print_msg('OK', 'Cross-origin embedding is allowed only if the response has the `Cross-Origin-Resource-Policy` header set to `same-site` or `same-origin`')
+
+    elif content.lower() == 'require-corp-credentialless':
+        print_msg('OK', 'Cross-origin embedding is allowed without credentials only if the response has the `Cross-Origin-Resource-Policy` header set to `same-site` or `same-origin`')
+
+    elif content.lower() == 'unsafe-none':
+        print_msg('WARN', 'No cross-origin embedding restrictions are enforced, which can lead to security risks')
+
+    else:
+        print_msg('HIGH', f'The specified Cross-Origin-Embedder-Policy header has an invalid value: {content}')
+
+    print_separator()
+
+
+def eval_cors_resource_policy(content: str) -> None:
+    print_title('Cross-Origin-Resource-Policy')
+
+    if content.lower() == 'same-site':
+        print_msg('OK', 'Cross-origin requests are only allowed from the same site')
+
+    elif content.lower() == 'same-origin':
+        print_msg('OK', 'Cross-origin requests are only allowed from the same origin')
+
+    elif content.lower() == 'cross-origin':
+        print_msg('OK', 'Cross-origin requests are allowed')
+
+    elif content.lower() == 'same-site-strict':
+        print_msg('OK', 'Cross-origin requests are only allowed from the same site and must use CORS headers')
+
+    elif content.lower() == 'same-origin-allow-popups':
+        print_msg('OK', 'Cross-origin requests are only allowed from the same origin and are allowed for popups')
+
+    else:
+        print_msg('ERR', f'The specified Cross-Origin-Resource-Policy header has an invalid value: {content}')
+
+    print_separator()
 
 
 def eval_content_type_options(content: str) -> None:
@@ -219,7 +286,7 @@ def eval_referrer_policy(content: str) -> None:
         print_msg('OK', 'The full referrer is sent only for requests within the same origin, preventing referrer information leakage to external sites during cross-origin requests')
 
     elif content.lower() == 'strict-origin-when-cross-origin':
-        print_msg('OK', 'The origin is sent for same-origin requests, while during cross-origin navigation, only the origin is sent, minimizing the exposure of sensitive information')
+        print_msg('WARN', 'The full URL is sent as the referrer, including the path, query parameters, and fragment identifier. This can potentially expose sensitive information in the referrer header.')
 
     else:
         print_msg(

@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["-U", "https://www.vallonchene.fr"],
+            "args": ["-U", "https://ocrvcenter.com/"],
             "console": "integratedTerminal",
             "justMyCode": true
         }
