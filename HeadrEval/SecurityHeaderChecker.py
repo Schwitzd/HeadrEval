@@ -12,19 +12,98 @@ class SecurityHeaderChecker:
         header_value: bool
 
     SECURITY_HEADERS = {
-        'Strict-Transport-Security': eval_strict_transport_security,
-        'Permissions-Policy': eval_permissions_policy,
-        'X-XSS-Protection': eval_xss_protection,
-        'Content-Security-Policy': eval_csp,
-        'Cross-Origin-Resource-Policy': eval_cors_resource_policy,
-        'Cross-Origin-Opener-Policy': eval_cors_opener_policy,
-        'Cross-Origin-Embedder-Policy': eval_cors_embedded_policy,
-        'Access-Control-Allow-Origin': eval_access_control_allow_origin,
-        'X-Frame-Options': eval_x_frame_options,
-        'X-Content-Type-Options': eval_content_type_options,
-        'Referrer-Policy': eval_referrer_policy,
-        'Feature-Policy': eval_feature_policy
+        'Strict-Transport-Security': {
+            'eval_function': eval_strict_transport_security,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'Permissions-Policy': {
+            'eval_function': eval_permissions_policy,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'X-XSS-Protection': {
+            'eval_function': eval_xss_protection,
+            'tags': 'deprecated',
+            'cross_eval': ('Content-Security-Policy')
+        },
+        'Content-Security-Policy': {
+            'eval_function': eval_csp,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'Cross-Origin-Resource-Policy': {
+            'eval_function': eval_cors_resource_policy,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Cross-Origin-Opener-Policy': {
+            'eval_function': eval_cors_opener_policy,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Cross-Origin-Embedder-Policy': {
+            'eval_function': eval_cors_embedded_policy,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Allow-Origin': {
+            'eval_function': eval_access_control_allow_origin,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Allow-Methods': {
+            'eval_function': eval_access_control_allow_methods,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Allow-Credentials': {
+            'eval_function': eval_access_control_allow_credentials,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Max-Age': {
+            'eval_function': eval_access_control_max_age,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Expose-Headers': {
+            'eval_function': eval_access_control_expose_headers,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Request-Method': {
+            'eval_function': eval_access_control_request_method,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'Access-Control-Request-Headers': {
+            'eval_function': eval_access_control_request_headers,
+            'tags': 'cors',
+            'cross_eval': ()
+        },
+        'X-Frame-Options': {
+            'eval_function': eval_x_frame_options,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'X-Content-Type-Options': {
+            'eval_function': eval_content_type_options,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'Referrer-Policy': {
+            'eval_function': eval_referrer_policy,
+            'tags': '',
+            'cross_eval': ()
+        },
+        'Feature-Policy': {
+            'eval_function': eval_feature_policy,
+            'tags': '',
+            'cross_eval': ()
+        }
     }
+
 
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.81 Safari/537.36'
@@ -69,6 +148,9 @@ class SecurityHeaderChecker:
             header_name = security_header.header_name
             header_value = security_header.header_value
 
+            if header_name in self.SECURITY_HEADERS and self.SECURITY_HEADERS[header_name].get('tags') == 'cors':
+                continue
+
             if header_value:
                 headers_with_values.append((header_name, header_value))
             else:
@@ -80,11 +162,30 @@ class SecurityHeaderChecker:
         for header in headers_without_values:
             print_msg('WARN', f'missing header {header}')
 
-    def evaluate_headers(self):
-        for security_header in self.security_headers:
-            header_name = security_header.header_name
-            header_value = security_header.header_value
 
-            if header_value is not False:
-                eval_func = self.SECURITY_HEADERS.get(header_name)
+    def evaluate_headers(self):
+        headers_to_evaluate = {
+            header.header_name: header.header_value
+            for header in self.security_headers
+            if header.header_value is not False
+        }
+
+        for header_name, header_value in headers_to_evaluate.items():
+            eval_func = self.SECURITY_HEADERS.get(header_name, {}).get('eval_function')
+            cross_eval = self.SECURITY_HEADERS.get(header_name, {}).get('cross_eval')
+
+            if cross_eval:
+
+                if isinstance(cross_eval, str):
+                    cross_eval = (cross_eval,)
+
+                cross_values = {}
+                for cross_header_name in cross_eval:
+                    cross_header_value = headers_to_evaluate.get(cross_header_name)
+                    if cross_header_value is None:
+                        continue
+                    cross_values[cross_header_name] = cross_header_value
+
+                eval_func(header_value, cross_values)
+            else:
                 eval_func(header_value)

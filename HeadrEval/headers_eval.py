@@ -1,23 +1,29 @@
 import re
-from HeadrEval.utils import print_msg, print_title, print_separator, csp_parser
+from HeadrEval.utils import print_msg, print_title, csp_parser
 
 
-def eval_xss_protection(content: str) -> None:
+def eval_xss_protection(content: str, cross_headers: dict = {}) -> None:
     print_title(f'X-XSS-Protection: {content}')
-    print_msg('DEP', 'instead should be used CSP')
+    
+    if cross_headers:
+        csp_policy = cross_headers.get('Content-Security-Policy')
+        if csp_policy:
+            print_msg('OK', 'CSP header is present. XSS protection is handled by the Content Security Policy.')
+    else:
+        print_msg('DEP', 'instead should be used CSP')
 
-    if content.lower() == '1; mode=block':
-        print_msg(
-            'OK', f"Setting to {content} helps protect against cross-site scripting (XSS) attacks by enabling the browser's built-in XSS protection mechanism")
+        if content.lower() == '1; mode=block':
+            print_msg(
+                'OK', f"Setting to {content} helps protect against cross-site scripting (XSS) attacks by enabling the browser's built-in XSS protection mechanism")
 
-    if content.lower() == '0':
-        print_msg(
-            'HIGH', 'Setting it to 0 may disable XSS protection, increasing the risk of cross-site scripting attacks')
+        if content.lower() == '0':
+            print_msg(
+                'HIGH', 'Setting it to 0 may disable XSS protection, increasing the risk of cross-site scripting attacks')
 
-    print_separator()
+    print()
 
 
-def eval_strict_transport_security(content: str):
+def eval_strict_transport_security(content: str) -> None:
     print_title('HSTS - Strict-Transport-Security')
     print_msg('OK', 'The presence of the HSTS header ensures secure connections by instructing the browser to only communicate with the website over HTTPS')
     directives = content.split(';')
@@ -48,7 +54,7 @@ def eval_strict_transport_security(content: str):
     print(f'Max-Age: {result["max_age"]}')
     print(f'Include Subdomains: {result["include_subdomains"]}')
     print(f'Preload: {result["preload"]}')
-    print_separator()
+    print()
 
 
 def eval_permissions_policy(content: str) -> None:
@@ -77,7 +83,7 @@ def eval_permissions_policy(content: str) -> None:
                 else:
                     print_msg('OK', f'{permission} access is enabled')
 
-    print_separator()
+    print()
 
 
 def eval_x_frame_options(content: str) -> None:
@@ -94,15 +100,13 @@ def eval_x_frame_options(content: str) -> None:
     else:
         print_msg('WARN', f'Invalid X-Frame-Options value: {header_value}')
 
-    print_separator()
+    print()
 
 
 def eval_csp(content: str) -> None:
     print_title('Content-Security-Policy')
     csp = csp_parser(content)
 
-    print_msg('HIGH', 'Found weakness in the CSP policy')
-    print()
     print(f'\033[1mPolicy:\033[0m {content}')
     print()
 
@@ -155,6 +159,7 @@ def eval_csp(content: str) -> None:
                     weak_directives.add(directive)
 
     if weak_directives:
+        print_msg('HIGH', 'Found weakness in the CSP policy')
         for directive in weak_directives:
             print(f'\033[1mDirective:\033[0m {directive}')
             for rule, explanation in unsafe_directives[directive]:
@@ -164,7 +169,8 @@ def eval_csp(content: str) -> None:
     else:
         print_msg('OK', 'No weak directives found in the CSP policy.')
 
-    print_separator()
+    print()
+
 
 def eval_access_control_allow_origin(content: str) -> None:
     print_title('Access-Control-Allow-Origin')
@@ -177,7 +183,26 @@ def eval_access_control_allow_origin(content: str) -> None:
         allowed_origins = ', '.join(origins)
         print_msg('OK', f'Access-Control-Allow-Origin is set to "{allowed_origins}" (allows requests from specified origins)')
 
-    print_separator()
+    print()
+
+
+def eval_access_control_allow_methods(content: str) -> None:
+    pass
+
+def eval_access_control_allow_credentials(content: str) -> None:
+    pass
+
+def eval_access_control_max_age(content: str) -> None:
+    pass
+
+def eval_access_control_expose_headers(content: str) -> None:
+    pass
+
+def eval_access_control_request_method(content: str) -> None:
+    pass
+
+def eval_access_control_request_headers(content: str) -> None:
+    pass
 
 
 def eval_cors_opener_policy(content: str) -> None:
@@ -201,7 +226,7 @@ def eval_cors_opener_policy(content: str) -> None:
     else:
         print_msg('ERR', f'The specified Cross-Origin-Opener-Policy header has an invalid value: {content}')
 
-    print_separator()
+    print()
 
 
 def eval_cors_embedded_policy(content: str) -> None:
@@ -225,7 +250,7 @@ def eval_cors_embedded_policy(content: str) -> None:
     else:
         print_msg('HIGH', f'The specified Cross-Origin-Embedder-Policy header has an invalid value: {content}')
 
-    print_separator()
+    print()
 
 
 def eval_cors_resource_policy(content: str) -> None:
@@ -249,7 +274,7 @@ def eval_cors_resource_policy(content: str) -> None:
     else:
         print_msg('ERR', f'The specified Cross-Origin-Resource-Policy header has an invalid value: {content}')
 
-    print_separator()
+    print()
 
 
 def eval_content_type_options(content: str) -> None:
@@ -260,7 +285,7 @@ def eval_content_type_options(content: str) -> None:
     else:
         print_msg('ERR', 'Header is different from "nosniff"')
 
-    print_separator()
+    print()
 
 
 def eval_referrer_policy(content: str) -> None:
@@ -293,5 +318,5 @@ def eval_referrer_policy(content: str) -> None:
             'ERR', f'The specified Referrer-Policy header has an invalid value: {content}')
 
 
-def eval_feature_policy(value):
+def eval_feature_policy(value) -> None:
     pass

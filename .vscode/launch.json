@@ -9,7 +9,8 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["-U", "https://ocrvcenter.com/"],
+            "args": ["-U", "www.ticinonews.ch"],
+            //"args": ["-U", "https://ocrvcenter.com/", "-L"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

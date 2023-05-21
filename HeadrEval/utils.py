@@ -20,8 +20,8 @@ def print_msg(type:str, message: str) -> None:
         print(f'{open_bracket}{type}{closed_bracket} {message}')
 
 def print_title(name: str) -> None:
-    print(colored(name, 'white', attrs=['bold', 'underline']))
-    print()
+    print(colored(name, 'white', attrs=['bold']))
+    print('-' * len(name))
 
 
 def csp_parser(csp_policy: str) -> dict:
@@ -36,9 +36,3 @@ def csp_parser(csp_policy: str) -> dict:
             csp[directive_name] = directive_values
 
     return csp
-
-
-def print_separator() -> None:
-    console_width = shutil.get_terminal_size().columns
-    line = '-' * console_width
-    print(line)
