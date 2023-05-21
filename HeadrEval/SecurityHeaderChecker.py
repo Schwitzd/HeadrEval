@@ -99,6 +99,11 @@ class SecurityHeaderChecker:
         },
         'Feature-Policy': {
             'eval_function': eval_feature_policy,
+            'tags': 'deprecated',
+            'cross_eval': ()
+        },
+        'Report-To': {
+            'eval_function': eval_report_to,
             'tags': '',
             'cross_eval': ()
         }

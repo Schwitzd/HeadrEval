@@ -3,3 +3,5 @@ argparse
 urlparse
 termcolor
 dataclasses
+re
+json

@@ -1,4 +1,5 @@
 import re
+import json
 from HeadrEval.utils import print_msg, print_title, csp_parser
 
 
@@ -316,7 +317,38 @@ def eval_referrer_policy(content: str) -> None:
     else:
         print_msg(
             'ERR', f'The specified Referrer-Policy header has an invalid value: {content}')
+        
+    print()
 
 
-def eval_feature_policy(value) -> None:
-    pass
+def eval_feature_policy(content: str) -> None:
+    print_title('Feature-Policy')
+    print_msg('WARN', 'Feature Policy has been renamed to Permissions Policy')
+
+    print()
+
+
+def eval_report_to(content: str) -> None:
+    print_title('Report-To')
+
+    print(f'\033[1mValue:\033[0m {content}')
+    print()
+
+    try:
+        report_to_data = json.loads(content)
+
+        if (
+            'endpoints' in report_to_data and
+            isinstance(report_to_data['endpoints'], list) and
+            all(isinstance(endpoint, dict) for endpoint in report_to_data['endpoints']) and
+            'group' in report_to_data and
+            isinstance(report_to_data['group'], str)
+        ):
+            print_msg('OK', 'Report-To header is properly configured.')
+        else:
+            print_msg('HIGH', 'Report-To header may be misconfigured or missing required fields.')
+
+    except json.JSONDecodeError:
+        print_msg('HIGH', 'Report-To header contains invalid JSON data.')
+
+    print()
