@@ -1,10 +1,9 @@
 import re
-import json
 from HeadrEval.utils import print_msg, print_title, csp_parser
 
 
-def eval_xss_protection(content: str, cross_headers: dict = {}) -> None:
-    print_title(f'X-XSS-Protection: {content}')
+def eval_xss_protection(header_value: str, cross_headers: dict = {}) -> None:
+    print_title(f'X-XSS-Protection: {header_value}')
     
     if cross_headers:
         csp_policy = cross_headers.get('Content-Security-Policy')
@@ -13,21 +12,21 @@ def eval_xss_protection(content: str, cross_headers: dict = {}) -> None:
     else:
         print_msg('DEP', 'instead should be used CSP')
 
-        if content.lower() == '1; mode=block':
+        if header_value.lower() == '1; mode=block':
             print_msg(
-                'OK', f"Setting to {content} helps protect against cross-site scripting (XSS) attacks by enabling the browser's built-in XSS protection mechanism")
+                'OK', f"Setting to {header_value} helps protect against cross-site scripting (XSS) attacks by enabling the browser's built-in XSS protection mechanism")
 
-        if content.lower() == '0':
+        if header_value.lower() == '0':
             print_msg(
                 'HIGH', 'Setting it to 0 may disable XSS protection, increasing the risk of cross-site scripting attacks')
 
     print()
 
 
-def eval_strict_transport_security(content: str) -> None:
+def eval_strict_transport_security(header_value: str) -> None:
     print_title('HSTS - Strict-Transport-Security')
     print_msg('OK', 'The presence of the HSTS header ensures secure connections by instructing the browser to only communicate with the website over HTTPS')
-    directives = content.split(';')
+    directives = header_value.split(';')
     result = {
         'max_age': None,
         'include_subdomains': False,
@@ -58,10 +57,10 @@ def eval_strict_transport_security(content: str) -> None:
     print()
 
 
-def eval_permissions_policy(content: str) -> None:
+def eval_permissions_policy(header_value: str) -> None:
     print_title('Permissions-Policy')
 
-    permissions = re.split(r', *|; *', content)
+    permissions = re.split(r', *|; *', header_value)
 
     for permission in permissions:
         policy_parts = permission.split('=')
@@ -87,9 +86,9 @@ def eval_permissions_policy(content: str) -> None:
     print()
 
 
-def eval_x_frame_options(content: str) -> None:
+def eval_x_frame_options(header_value: str) -> None:
     print_title('X-Frame-Options')
-    header_value = content.lower().strip()
+    header_value = header_value.lower().strip()
 
     if header_value == 'deny':
         print_msg('OK', 'X-Frame-Options is set to "deny" (prevents framing of the web page)')
@@ -104,11 +103,11 @@ def eval_x_frame_options(content: str) -> None:
     print()
 
 
-def eval_csp(content: str) -> None:
+def eval_csp(header_value: str) -> None:
     print_title('Content-Security-Policy')
-    csp = csp_parser(content)
+    csp = csp_parser(header_value)
 
-    print(f'\033[1mPolicy:\033[0m {content}')
+    print(f'\033[1mPolicy:\033[0m {header_value}')
     print()
 
     unsafe_directives = {
@@ -173,13 +172,13 @@ def eval_csp(content: str) -> None:
     print()
 
 
-def eval_access_control_allow_origin(content: str) -> None:
+def eval_access_control_allow_origin(header_value: str) -> None:
     print_title('Access-Control-Allow-Origin')
 
-    if content == '*':
+    if header_value == '*':
         print_msg('WARN', 'Access-Control-Allow-Origin is set to "*" (allows requests from any origin)')
     else:
-        origins = content.split(',')
+        origins = header_value.split(',')
         origins = [origin.strip() for origin in origins]
         allowed_origins = ', '.join(origins)
         print_msg('OK', f'Access-Control-Allow-Origin is set to "{allowed_origins}" (allows requests from specified origins)')
@@ -187,101 +186,101 @@ def eval_access_control_allow_origin(content: str) -> None:
     print()
 
 
-def eval_access_control_allow_methods(content: str) -> None:
+def eval_access_control_allow_methods(header_value: str) -> None:
     pass
 
-def eval_access_control_allow_credentials(content: str) -> None:
+def eval_access_control_allow_credentials(header_value: str) -> None:
     pass
 
-def eval_access_control_max_age(content: str) -> None:
+def eval_access_control_max_age(header_value: str) -> None:
     pass
 
-def eval_access_control_expose_headers(content: str) -> None:
+def eval_access_control_expose_headers(header_value: str) -> None:
     pass
 
-def eval_access_control_request_method(content: str) -> None:
+def eval_access_control_request_method(header_value: str) -> None:
     pass
 
-def eval_access_control_request_headers(content: str) -> None:
+def eval_access_control_request_headers(header_value: str) -> None:
     pass
 
 
-def eval_cors_opener_policy(content: str) -> None:
+def eval_cors_opener_policy(header_value: str) -> None:
     print_title('Cross-Origin-Opener-Policy')
 
-    if content.lower() == 'same-origin':
+    if header_value.lower() == 'same-origin':
         print_msg('OK', 'The opener browsing context is restricted to the same origin, preventing cross-origin interactions')
 
-    elif content.lower() == 'same-origin-allow-popups':
+    elif header_value.lower() == 'same-origin-allow-popups':
         print_msg('OK', 'The opener browsing context is restricted to the same origin, allowing popups')
 
-    elif content.lower() == 'unsafe-none':
+    elif header_value.lower() == 'unsafe-none':
         print_msg('WARN', 'The opener browsing context is not restricted and can be cross-origin')
 
-    elif content.lower() == 'same-origin-plus-coep':
+    elif header_value.lower() == 'same-origin-plus-coep':
         print_msg('OK', 'The opener browsing context is restricted to the same origin and requires Cross-Origin-Embedder-Policy (COEP) enforcement')
 
-    elif content.lower() == 'same-origin-allow-popups-plus-coep':
+    elif header_value.lower() == 'same-origin-allow-popups-plus-coep':
         print_msg('OK', 'The opener browsing context is restricted to the same origin, allowing popups, and requires COEP enforcement')
 
     else:
-        print_msg('ERR', f'The specified Cross-Origin-Opener-Policy header has an invalid value: {content}')
+        print_msg('ERR', f'The specified Cross-Origin-Opener-Policy header has an invalid value: {header_value}')
 
     print()
 
 
-def eval_cors_embedded_policy(content: str) -> None:
+def eval_cors_embedded_policy(header_value: str) -> None:
     print_title('Cross-Origin-Embedder-Policy')
 
-    if content.lower() == 'none':
+    if header_value.lower() == 'none':
         print_msg('OK', 'No cross-origin embedding restrictions are enforced')
 
-    elif content.lower() == 'credentialless':
+    elif header_value.lower() == 'credentialless':
         print_msg('OK', 'Cross-origin embedding is allowed without credentials')
 
-    elif content.lower() == 'require-corp':
+    elif header_value.lower() == 'require-corp':
         print_msg('OK', 'Cross-origin embedding is allowed only if the response has the `Cross-Origin-Resource-Policy` header set to `same-site` or `same-origin`')
 
-    elif content.lower() == 'require-corp-credentialless':
+    elif header_value.lower() == 'require-corp-credentialless':
         print_msg('OK', 'Cross-origin embedding is allowed without credentials only if the response has the `Cross-Origin-Resource-Policy` header set to `same-site` or `same-origin`')
 
-    elif content.lower() == 'unsafe-none':
+    elif header_value.lower() == 'unsafe-none':
         print_msg('WARN', 'No cross-origin embedding restrictions are enforced, which can lead to security risks')
 
     else:
-        print_msg('HIGH', f'The specified Cross-Origin-Embedder-Policy header has an invalid value: {content}')
+        print_msg('HIGH', f'The specified Cross-Origin-Embedder-Policy header has an invalid value: {header_value}')
 
     print()
 
 
-def eval_cors_resource_policy(content: str) -> None:
+def eval_cors_resource_policy(header_value: str) -> None:
     print_title('Cross-Origin-Resource-Policy')
 
-    if content.lower() == 'same-site':
+    if header_value.lower() == 'same-site':
         print_msg('OK', 'Cross-origin requests are only allowed from the same site')
 
-    elif content.lower() == 'same-origin':
+    elif header_value.lower() == 'same-origin':
         print_msg('OK', 'Cross-origin requests are only allowed from the same origin')
 
-    elif content.lower() == 'cross-origin':
+    elif header_value.lower() == 'cross-origin':
         print_msg('OK', 'Cross-origin requests are allowed')
 
-    elif content.lower() == 'same-site-strict':
+    elif header_value.lower() == 'same-site-strict':
         print_msg('OK', 'Cross-origin requests are only allowed from the same site and must use CORS headers')
 
-    elif content.lower() == 'same-origin-allow-popups':
+    elif header_value.lower() == 'same-origin-allow-popups':
         print_msg('OK', 'Cross-origin requests are only allowed from the same origin and are allowed for popups')
 
     else:
-        print_msg('ERR', f'The specified Cross-Origin-Resource-Policy header has an invalid value: {content}')
+        print_msg('ERR', f'The specified Cross-Origin-Resource-Policy header has an invalid value: {header_value}')
 
     print()
 
 
-def eval_content_type_options(content: str) -> None:
+def eval_content_type_options(header_value: str) -> None:
     print_title('X-Content-Type-Options')
 
-    if content.lower() == 'nosniff':
+    if header_value.lower() == 'nosniff':
         print_msg('OK', 'When the header value is set to "nosniff", it instructs the browser to prevent MIME-sniffing attacks by strictly interpreting the content type without performing content sniffing')
     else:
         print_msg('ERR', 'Header is different from "nosniff"')
@@ -289,66 +288,41 @@ def eval_content_type_options(content: str) -> None:
     print()
 
 
-def eval_referrer_policy(content: str) -> None:
-    print_title(f'Referrer-Policy: {content}')
+def eval_referrer_policy(header_value: str) -> None:
+    print_title(f'Referrer-Policy: {header_value}')
 
-    if content.lower() == 'no-referrer':
+    if header_value.lower() == 'no-referrer':
         print_msg(
             'OK', 'No referrer information is sent, potentially limiting the ability to track and analyze legitimate referrals')
 
-    elif content.lower() == 'no-referrer-when-downgrade':
+    elif header_value.lower() == 'no-referrer-when-downgrade':
         print_msg('OK', 'Referrer information is not sent during HTTPS to HTTP navigation, preventing the exposure of sensitive data in the Referer header')
 
-    elif content.lower() == 'origin':
+    elif header_value.lower() == 'origin':
         print_msg('OK', 'Only the origin (scheme, host, and port) is sent as the referrer, excluding the path and query parameters, which helps protect sensitive information during cross-origin requests')
 
-    elif content.lower() == 'origin-when-cross-origin':
+    elif header_value.lower() == 'origin-when-cross-origin':
         print_msg('OK', 'The full referrer is sent within the same origin, while only the origin is sent during cross-origin navigation, balancing security and usability')
 
-    elif content.lower() == 'same-origin':
+    elif header_value.lower() == 'same-origin':
         print_msg('OK', 'The full referrer is sent only for requests within the same origin, preventing referrer information leakage to external sites during cross-origin requests.')
 
-    elif content.lower() == 'strict-origin':
+    elif header_value.lower() == 'strict-origin':
         print_msg('OK', 'The full referrer is sent only for requests within the same origin, preventing referrer information leakage to external sites during cross-origin requests')
 
-    elif content.lower() == 'strict-origin-when-cross-origin':
+    elif header_value.lower() == 'strict-origin-when-cross-origin':
         print_msg('WARN', 'The full URL is sent as the referrer, including the path, query parameters, and fragment identifier. This can potentially expose sensitive information in the referrer header.')
 
     else:
         print_msg(
-            'ERR', f'The specified Referrer-Policy header has an invalid value: {content}')
+            'ERR', f'The specified Referrer-Policy header has an invalid value: {header_value}')
         
     print()
 
 
-def eval_feature_policy(content: str) -> None:
+def eval_feature_policy(header_value: str) -> None:
     print_title('Feature-Policy')
     print_msg('WARN', 'Feature Policy has been renamed to Permissions Policy')
 
     print()
 
-
-def eval_report_to(content: str) -> None:
-    print_title('Report-To')
-
-    print(f'\033[1mValue:\033[0m {content}')
-    print()
-
-    try:
-        report_to_data = json.loads(content)
-
-        if (
-            'endpoints' in report_to_data and
-            isinstance(report_to_data['endpoints'], list) and
-            all(isinstance(endpoint, dict) for endpoint in report_to_data['endpoints']) and
-            'group' in report_to_data and
-            isinstance(report_to_data['group'], str)
-        ):
-            print_msg('OK', 'Report-To header is properly configured.')
-        else:
-            print_msg('HIGH', 'Report-To header may be misconfigured or missing required fields.')
-
-    except json.JSONDecodeError:
-        print_msg('HIGH', 'Report-To header contains invalid JSON data.')
-
-    print()

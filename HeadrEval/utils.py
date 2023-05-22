@@ -1,23 +1,22 @@
-import shutil
 from termcolor import colored
 
-def print_msg(type:str, message: str) -> None:
+def print_msg(code: str, message: str) -> None:
     open_bracket = colored('[', 'white')
     closed_bracket = colored(']', 'white')
 
-    type_colors = {
+    code_colors = {
         'OK': ('OK', 'green', []),
         'DEP': ('DEPRECATED', 'yellow', []),
         'WARN': ('WARNING', 'yellow', ['bold']),
         'HIGH': ('HIGH', 'red', ['bold'])
     }
 
-    if type in type_colors:
-        type_text, color, attrs = type_colors[type]
-        type_colored = colored(type_text, color, attrs=attrs)
-        print(f'{open_bracket}{type_colored}{closed_bracket} {message}')
+    if code in code_colors:
+        code_text, color, attrs = code_colors[code]
+        code_colored = colored(code_text, color, attrs=attrs)
+        print(f'{open_bracket}{code_colored}{closed_bracket} {message}')
     else:
-        print(f'{open_bracket}{type}{closed_bracket} {message}')
+        print(f'{open_bracket}{code}{closed_bracket} {message}')
 
 def print_title(name: str) -> None:
     print(colored(name, 'white', attrs=['bold']))

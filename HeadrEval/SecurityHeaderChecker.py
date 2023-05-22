@@ -1,13 +1,18 @@
 from dataclasses import dataclass
 from urllib.parse import urlparse
 import requests
-from HeadrEval.utils import print_msg
+from HeadrEval.utils import print_msg, print_title
 from HeadrEval.headers_eval import *
 
 
 class SecurityHeaderChecker:
     @dataclass
     class SecurityHeaders:
+        header_name: str
+        header_value: bool
+
+    @dataclass
+    class LeakedHeaders:
         header_name: str
         header_value: bool
 
@@ -85,7 +90,7 @@ class SecurityHeaderChecker:
         'X-Frame-Options': {
             'eval_function': eval_x_frame_options,
             'tags': '',
-            'cross_eval': ()
+            'cross_eval': ('Content-Security-Policy')
         },
         'X-Content-Type-Options': {
             'eval_function': eval_content_type_options,
@@ -101,14 +106,27 @@ class SecurityHeaderChecker:
             'eval_function': eval_feature_policy,
             'tags': 'deprecated',
             'cross_eval': ()
-        },
-        'Report-To': {
-            'eval_function': eval_report_to,
-            'tags': '',
-            'cross_eval': ()
         }
     }
 
+    LEAK_HEADERS = (
+    'Server',
+    'X-Powered-By',
+    'X-AspNet-Version',
+    'X-AspNetMvc-Version',
+    'X-PHP-Version',
+    'X-Powered-CMS',
+    'X-Runtime',
+    'X-Node-ID',
+    'X-Host',
+    'X-Version',
+    'X-Backend-Server',
+    'X-Varnish',
+    'X-Node',
+    'X-Hostname',
+    'X-Instance-ID',
+    'X-Turbo-Charged-By'
+)
 
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.81 Safari/537.36'
@@ -119,6 +137,7 @@ class SecurityHeaderChecker:
         self.url = self.__parse_url()
         self.connection = self.__open_connection()
         self.security_headers = self.__fetch_headers()
+        self.leaked_headers = self.__leaking_headers()
 
     def __parse_url(self) -> str:
         parsed_url = urlparse(self.raw_url)
@@ -145,6 +164,18 @@ class SecurityHeaderChecker:
 
         return security_headers
 
+
+    def __leaking_headers(self) -> LeakedHeaders:
+        headers = self.connection.headers
+        leaked_headers = [
+            self.LeakedHeaders(header_name, headers.get(header_name))
+            for header_name in self.LEAK_HEADERS
+            if headers.get(header_name) is not None
+        ]
+
+        return leaked_headers
+
+
     def list_only(self) -> None:
         headers_with_values = []
         headers_without_values = []
@@ -166,6 +197,11 @@ class SecurityHeaderChecker:
 
         for header in headers_without_values:
             print_msg('WARN', f'missing header {header}')
+
+        print()
+        print_title('Possibile Leaked Headers')
+        for leaked_header in self.leaked_headers:
+            print(f'{leaked_header.header_name}: {leaked_header.header_value}')
 
 
     def evaluate_headers(self):
@@ -194,3 +230,7 @@ class SecurityHeaderChecker:
                 eval_func(header_value, cross_values)
             else:
                 eval_func(header_value)
+
+        print_title('Possibile Leaked Headers')
+        for leaked_header in self.leaked_headers:
+            print(f'{leaked_header.header_name}: {leaked_header.header_value}')
