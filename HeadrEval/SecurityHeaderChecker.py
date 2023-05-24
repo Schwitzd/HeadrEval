@@ -1,18 +1,22 @@
 from dataclasses import dataclass
 from urllib.parse import urlparse
+import sys
 import requests
 from HeadrEval.utils import print_msg, print_title
 from HeadrEval.headers_eval import *
 
 
 class SecurityHeaderChecker:
+    """A class for checking security headers and leaked headers of a given URL"""
     @dataclass
     class SecurityHeaders:
+        """Represents a security header"""
         header_name: str
         header_value: bool
 
     @dataclass
     class LeakedHeaders:
+        """Represents a leaked header"""
         header_name: str
         header_value: bool
 
@@ -90,7 +94,7 @@ class SecurityHeaderChecker:
         'X-Frame-Options': {
             'eval_function': eval_x_frame_options,
             'tags': '',
-            'cross_eval': ('Content-Security-Policy')
+            'cross_eval': ()
         },
         'X-Content-Type-Options': {
             'eval_function': eval_content_type_options,
@@ -152,8 +156,10 @@ class SecurityHeaderChecker:
                 self.url, timeout=1.0, headers=self.HEADERS)
             response.raise_for_status()
             return response
-        except (requests.RequestException, ConnectionError) as e:
-            raise ConnectionError(f"Failed to connect to {self.url}: {e}")
+        except (requests.exceptions.RequestException):
+            print_msg('HIGH',f'Failed to connect to {self.url}')
+            sys.exit(1)
+
 
     def __fetch_headers(self) -> SecurityHeaders:
         headers = self.connection.headers
@@ -177,9 +183,16 @@ class SecurityHeaderChecker:
 
 
     def list_only(self) -> None:
+        """
+        Lists the security headers with their values and identifies missing headers.
+        Prints the headers with values as 'OK', and missing headers as 'WARN'.
+        Additionally, prints the possibly leaked headers.
+        """
         headers_with_values = []
         headers_without_values = []
 
+        print_msg('INF', f'Getting headers from {self.url}')
+        print()
         for security_header in self.security_headers:
             header_name = security_header.header_name
             header_value = security_header.header_value
@@ -205,12 +218,20 @@ class SecurityHeaderChecker:
 
 
     def evaluate_headers(self):
+        """
+        Evaluates the security headers based on their values.
+        Calls the corresponding evaluation function for each header and 
+        performs cross-evaluation if required. Prints the evaluation results.
+        Additionally, prints the possibly leaked headers.
+        """
         headers_to_evaluate = {
             header.header_name: header.header_value
             for header in self.security_headers
             if header.header_value is not False
         }
 
+        print_msg('INF', f'Getting headers from {self.url}')
+        print()
         for header_name, header_value in headers_to_evaluate.items():
             eval_func = self.SECURITY_HEADERS.get(header_name, {}).get('eval_function')
             cross_eval = self.SECURITY_HEADERS.get(header_name, {}).get('cross_eval')

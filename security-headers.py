@@ -8,11 +8,12 @@ print('''
 |  _  |/ _ \/ _` |/ _` | '__|  __\ \ / / _` | |
 | | | |  __/ (_| | (_| | |  | |___\ V / (_| | |
 \_| |_/\___|\__,_|\__,_|_|  \____/ \_/ \__,_|_|
-                                         v0.3.2                                               
+                                         v0.4.5                                               
 
 ''')
 
 def get_args():
+    """Parses command-line arguments and returns the argument values."""
     parser = argparse.ArgumentParser()
     parser.add_argument('-U', '--url', type=str, dest='url', required=True,
                         help='Url to scan')

@@ -1,10 +1,12 @@
 from termcolor import colored
 
 def print_msg(code: str, message: str) -> None:
+    """Prints a formatted message with the provided code and message"""
     open_bracket = colored('[', 'white')
     closed_bracket = colored(']', 'white')
 
     code_colors = {
+        'INFO': ('INF', 'white', []),
         'OK': ('OK', 'green', []),
         'DEP': ('DEPRECATED', 'yellow', []),
         'WARN': ('WARNING', 'yellow', ['bold']),
@@ -19,16 +21,18 @@ def print_msg(code: str, message: str) -> None:
         print(f'{open_bracket}{code}{closed_bracket} {message}')
 
 def print_title(name: str) -> None:
+    """Prints a title with a horizontal line underneath."""
     print(colored(name, 'white', attrs=['bold']))
     print('-' * len(name))
 
 
 def csp_parser(csp_policy: str) -> dict:
+    """Parses a CSP policy string and returns a dictionary representation"""
     csp = {}
     directives = csp_policy.split(";")
     for directive in directives:
         directive = directive.strip().split()
-        
+
         if directive:
             directive_name = directive[0]
             directive_values = directive[1:] if len(directive) > 1 else []

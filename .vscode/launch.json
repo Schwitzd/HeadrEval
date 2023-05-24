@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["-U", "https://codeandpepper.com"],
+            "args": ["-U", "https://datenstrand.de"],
             //"args": ["-U", "https://ocrvcenter.com/", "-L"],
             "console": "integratedTerminal",
             "justMyCode": true
