@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 import sys
 import requests
-from HeadrEval.utils import print_msg, print_title
+from HeadrEval.utils import print_msg, print_title, get_random_user_agent
 from HeadrEval.headers_eval import *
 
 
@@ -132,13 +132,10 @@ class SecurityHeaderChecker:
     'X-Turbo-Charged-By'
 )
 
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.81 Safari/537.36'
-    }
-
     def __init__(self, url):
         self.raw_url = url
         self.url = self.__parse_url()
+        self.user_agent = get_random_user_agent()
         self.connection = self.__open_connection()
         self.security_headers = self.__fetch_headers()
         self.leaked_headers = self.__leaking_headers()
@@ -153,7 +150,7 @@ class SecurityHeaderChecker:
     def __open_connection(self):
         try:
             response = requests.get(
-                self.url, timeout=1.0, headers=self.HEADERS)
+                self.url, timeout=1.0, headers=self.user_agent)
             response.raise_for_status()
             return response
         except (requests.exceptions.RequestException):

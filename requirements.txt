@@ -5,3 +5,5 @@ termcolor
 dataclasses
 re
 sys
+os
+random

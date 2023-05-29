@@ -1,4 +1,16 @@
+import random
+import os
 from termcolor import colored
+
+
+def get_random_user_agent():
+    """Randomly selects a user agent from the user_agents.txt file"""
+    file_path = os.path.join('data', 'user_agents.txt')
+    with open(file_path, 'r', encoding='utf-8') as file:
+        user_agents = file.readlines()
+
+    return random.choice(user_agents).strip()
+
 
 def print_msg(code: str, message: str) -> None:
     """Prints a formatted message with the provided code and message"""
