@@ -1,9 +1,0 @@
-requests
-argparse
-urlparse
-termcolor
-dataclasses
-re
-sys
-os
-random

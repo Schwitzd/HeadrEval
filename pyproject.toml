@@ -1,0 +1,17 @@
+[project]
+name = "HeadrEval"
+version = "0.5.1"
+dependencies = [
+    "requests",
+    "argparse",
+    "termcolor",
+    "dataclasses",
+]
+
+[project.scripts]
+HeadrEval = "HeadrEval.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+

@@ -9,8 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["-U", ""],
-            //"args": ["-U", "https://ocrvcenter.com/", "-L"],
+            "args": ["-U", "https://ocrvcenter.com/"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

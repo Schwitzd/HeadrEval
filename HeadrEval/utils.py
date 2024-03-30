@@ -9,7 +9,8 @@ def get_random_user_agent():
     with open(file_path, 'r', encoding='utf-8') as file:
         user_agents = file.readlines()
 
-    return random.choice(user_agents).strip()
+    user_agent = {'User-Agent': random.choice(user_agents).strip()}
+    return user_agent
 
 
 def print_msg(code: str, message: str) -> None:

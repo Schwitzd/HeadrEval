@@ -153,7 +153,7 @@ class SecurityHeaderChecker:
                 self.url, timeout=1.0, headers=self.user_agent)
             response.raise_for_status()
             return response
-        except (requests.exceptions.RequestException):
+        except requests.exceptions.RequestException:
             print_msg('HIGH',f'Failed to connect to {self.url}')
             sys.exit(1)
 
