@@ -32,7 +32,7 @@ def main():
     checker = SecurityHeaderChecker(args.url)
 
     if args.list:
-        checker.list_only()
+        checker.list_only1()
     else:
         checker.evaluate_headers()
 
