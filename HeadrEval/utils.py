@@ -3,6 +3,20 @@ import os
 from termcolor import colored
 
 
+def print_banner():
+    """Print the banner"""
+    print('''
+    _   _                _      _____           _ 
+    | | | |              | |    |  ___|         | |
+    | |_| | ___  __ _  __| |_ __| |____   ____ _| |
+    |  _  |/ _ \/ _` |/ _` | '__|  __\ \ / / _` | |
+    | | | |  __/ (_| | (_| | |  | |___\ V / (_| | |
+    \_| |_/\___|\__,_|\__,_|_|  \____/ \_/ \__,_|_|
+                                            v0.5.2                                               
+
+    ''')
+
+
 def get_random_user_agent():
     """Randomly selects a user agent from the user_agents.txt file"""
     file_path = os.path.join('data', 'user_agents.txt')

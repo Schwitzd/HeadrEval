@@ -1,16 +1,7 @@
 import argparse
+from HeadrEval.utils import print_banner
 from HeadrEval.SecurityHeaderChecker import SecurityHeaderChecker
 
-print('''
- _   _                _      _____           _ 
-| | | |              | |    |  ___|         | |
-| |_| | ___  __ _  __| |_ __| |____   ____ _| |
-|  _  |/ _ \/ _` |/ _` | '__|  __\ \ / / _` | |
-| | | |  __/ (_| | (_| | |  | |___\ V / (_| | |
-\_| |_/\___|\__,_|\__,_|_|  \____/ \_/ \__,_|_|
-                                         v0.5.1                                               
-
-''')
 
 def get_args():
     """Parses command-line arguments and returns the argument values."""
@@ -27,14 +18,17 @@ def get_args():
 
     return args
 
+
 def main():
+    print_banner()
     args = get_args()
     checker = SecurityHeaderChecker(args.url)
 
     if args.list:
-        checker.list_only1()
+        checker.list_only()
     else:
         checker.evaluate_headers()
+
 
 if __name__ == '__main__':
     main()

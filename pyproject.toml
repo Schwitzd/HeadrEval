@@ -1,6 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "HeadrEval"
-version = "0.5.1"
+dynamic = [
+  "version"
+]
 dependencies = [
     "requests",
     "argparse",
@@ -9,9 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-HeadrEval = "HeadrEval.main:main"
+HeadrEval = "HeadrEval.core:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
+[tool.hatch.version]
+path = "HeadrEval/__about__.py"
