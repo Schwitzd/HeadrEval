@@ -6,10 +6,15 @@ from HeadrEval.SecurityHeaderChecker import SecurityHeaderChecker
 def get_args():
     """Parses command-line arguments and returns the argument values."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-U', '--url', type=str, dest='url', required=True,
-                        help='Url to scan')
-    parser.add_argument('-L', '--list', action='store_true', dest='list',
-                        help='list headers without do a security evaluation')
+    parser.add_argument(
+        '-U', '--url', type=str, dest='url', required=True,
+        help='Url to scan'
+    )
+
+    parser.add_argument(
+        '-L', '--list', action='store_true', dest='list',
+        help='list headers without do a security evaluation'
+    )
 
     args = parser.parse_args()
     if not (args.url or args.file):
