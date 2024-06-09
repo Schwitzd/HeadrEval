@@ -11,13 +11,24 @@ HeadrEval is a command-line tool for evaluating security headers of a given URL.
 ## Getting Started
 
 1. Clone the repository:
-```git clone https://github.com/Schwitzd/HeadrEval.git```
 
-2. Install the required dependencies:
-```pip install -r requirements.txt```
+  ```bash
+  git clone https://github.com/Schwitzd/HeadrEval.git
+  ```
+
+2. Create a Python virtual environment and activate it (optional):
+
+  ```bash
+  cd HeadrEval
+  python -m venv .env
+  source .env/bin/activate
+  ```
 
 3. Run the script:
-```python3 security-headers.py -h```
+
+```bash
+python3 HeadrEval -h
+```
 
 ## Usage
 
@@ -28,7 +39,7 @@ HeadrEval is a command-line tool for evaluating security headers of a given URL.
 |  _  |/ _ \/ _` |/ _` | '__|  __\ \ / / _` | |
 | | | |  __/ (_| | (_| | |  | |___\ V / (_| | |
 \_| |_/\___|\__,_|\__,_|_|  \____/ \_/ \__,_|_|
-                                         v0.5.0                                               
+                                         v0.6.0                                               
 
 
 usage: security-headers.py [-h] -U URL [-L]

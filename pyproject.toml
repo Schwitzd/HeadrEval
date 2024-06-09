@@ -4,8 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "HeadrEval"
-dynamic = [
-  "version"
+dynamic = ["version"]
+description = "HeadrEval is a command-line tool for evaluating security headers of a given URL"
+readme = "README.md"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Schwitzd", email = "me@schwitzd.me" },
 ]
 dependencies = [
     "requests",
@@ -14,8 +19,13 @@ dependencies = [
     "dataclasses",
 ]
 
+[project.urls]
+Documentation = "https://github.com/Schwitzd/HeadrEval#readme"
+Issues = "https://github.com/Schwitzd/HeadrEval/issues"
+Source = "https://github.com/Schwitzd/HeadrEval"
+
 [project.scripts]
-HeadrEval = "HeadrEval.core:main"
+HeadrEval = "HeadrEval.main:main"
 
 [tool.hatch.version]
-path = "HeadrEval/__about__.py"
+path = "src/HeadrEval/__about__.py"
